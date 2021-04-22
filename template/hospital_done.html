@@ -209,12 +209,12 @@
     <div class=form>
         <div class=pgtitle>Patient Vaccinated</div>
         <br> <br>  
-        <form class="register-form" action="\hospital_done" method="POST" name="form1">
+        <form class="register-form" action="/hospital_done" method="POST" name="form1">
             <div class="msg" align="center" style="color:darkred;"><b>{{ msg }}</b></div>
             <table align="center">
                 <tr>
                     <td>Citizen UID</td>
-                    <td><input id="uid" type="text" placeholder="Citizen UID"/><br></td>
+                    <td><input id="uid" name="uid" type="text" placeholder="Citizen UID"/><br></td>
                 </tr>
                 <tr>
                     <td><button type="submit">Submit</button></td>
