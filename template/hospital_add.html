@@ -211,24 +211,24 @@
     <div class=form>
         <div class=pgtitle>Add Vaccine to Database</div>
         <br> <br>  
-        <form class="register-form" action="/hospital_add" method="POST" name="form1">
+        <form class="register-form" action="\hospital_add" method="POST" name="form1">
             <div class="msg" align="center" style="color:darkred;"><b>{{ msg }}</b></div>
             <table align="center">
                 <tr>
                     <td>Hospital Number</td>
-                    <td><input id="hid" type="text" placeholder="Hospital Unique ID"></td>
+                    <td><input id="hid" name="hid" type="text" placeholder="Hospital Unique ID"></td>
                 </tr>
                 <tr>
                     <td>Name of Hospital</td>
-                    <td><input id="hname"type="text" placeholder="Hospital Name"/></td>
+                    <td><input id="hname" name="hname" type="text" placeholder="Hospital Name"/></td>
                 </tr>
                 <tr>
                     <td>Serial Number</td>
-                    <td><input id="snumber"type="text" placeholder="Serial number"/><br></td>
+                    <td><input id="snumber" name="snumber" type="text" placeholder="Serial number"/><br></td>
                 </tr>
                 <tr>
                     <td>Batch Number</td>
-                    <td><input id="bnumber"type="text" placeholder="Batch number"/><br></td>
+                    <td><input id="bnumber" name="bnumber" type="text" placeholder="Batch number"/><br></td>
                 </tr>
                 <tr>
                     <td><button type="submit">Submit</button></td>
