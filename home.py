@@ -1,6 +1,6 @@
 from covid_india import states
 import pandas as pd
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, Response
 import re
 import sqlite3
 from geopy.geocoders import Nominatim
@@ -8,6 +8,9 @@ from geopy.extra.rate_limiter import RateLimiter
 import pandas as pd
 from sklearn.cluster import AgglomerativeClustering
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
+import io
 
 stats = states.getdata()
 df = pd.DataFrame(stats)
@@ -48,7 +51,7 @@ def public_signup():
         c.execute('select uid from citizen where email = ?',[email])
         uid = c.fetchone()
         msg = 'Registered Successfully! Uid is ' + str(uid[0]) + '!'
-      except Exception:
+      except:
         c.execute('select uid from citizen where email = ?',[email])
         uid = c.fetchone()[0]
         msg = "Already Registered. Uid is " + str(uid[0]) + '!'
@@ -99,7 +102,7 @@ def hospital_order():
     c = connection.cursor()
     if not hid or not hname or not qnumber:
       msg = 'Please fill out the form!'
-    elif qnumber <= 0:
+    elif int(qnumber) <= 0:
       msg = "Invalid Quantity!"
     else:
       try:
@@ -109,7 +112,7 @@ def hospital_order():
         c.execute('select qnumber from vaccineorder where hid = ?',[hid])
         q = c.fetchone()[0]
         c.execute('update vaccineorder set qnumber=? where hid=?',(str(int(q)+int(qnumber)), hid))
-        msg = "Vaccine Already Added!"
+        msg = "Order Updated!"
       connection.commit()
   elif request.method == 'POST':
     msg = 'Please fill out the form!'
@@ -151,7 +154,7 @@ def hospital_remove():
 def hospital_done():
   msg = ''
   if request.method == 'POST' and 'uid' in request.form:
-    uid = request.form['hid']
+    uid = request.form['uid']
     connection = sqlite3.connect("bharan.db")
     c = connection.cursor()
     regex = "^[0-9]+$"
@@ -162,12 +165,13 @@ def hospital_done():
       msg = "Invalid User Number!"
     else:
       try:
-        c.execute("select uid from citizen where uid = ?",[uid])
+        c.execute("select * from citizen where uid = ?",[uid])
         row = c.fetchone()
-        c.execute("insert into citizenvaccinated values(?,?,?,?,?,?)",(row['uid'], row['name'], row['email'], row['age'], row['address'], row['aadhar']))
-        msg = 'Vaccine Used!'
+        c.execute("insert into citizenvaccinated values(?,?,?,?,?,?)",(row[0], row[1], row[2], row[3], row[4], row[5]))
+        c.execute('delete from citizen where uid=(?)',[uid])
+        msg = 'User Vaccinated!'
       except Exception:
-        msg = "Vaccine Already Used!"
+        msg = "User Already Vaccinated Used!"
       connection.commit()
   elif request.method == 'POST':
     msg = 'Please fill out the form!'
@@ -216,8 +220,6 @@ def manufacture_get():
   msg=""
   if request.method == 'POST' and 'mid' in request.form:
     mid = request.form['mid']
-    connection = sqlite3.connect("bharan.db")
-    c = connection.cursor()
     regex = "^[0-9]+$"
     p = re.compile(regex)
     if not mid:
@@ -225,13 +227,18 @@ def manufacture_get():
     elif not re.search(p, mid):
       msg = "Invalid User Number!"
     else:
+      msg = 'Here are your orders!'
+      connection = sqlite3.connect("bharan.db")
+      c = connection.cursor()
       c.execute("select * from vaccineorder")
       rows = c.fetchall()
-      msg = 'Here are your orders!'
       connection.commit()
+      return render_template("manufacture_get.html", rows=rows, msg=msg)
   elif request.method == 'POST':
     msg = 'Please fill out the form!'
-  return render_template("manufacture_get.html", rows=rows, msg=msg)
+  return render_template("manufacture_get.html", rows=[[]], msg=msg)
+
+  
 
 @app.route("/admin", methods=['GET', 'POST'])
 def admin():
@@ -241,6 +248,7 @@ def admin():
     password="pass@123"
     if not ap:
       msg="Enter Password!"
+      return render_template("admin.html", msg=msg)
     elif ap != password:
       msg="Invalid Password"
       return render_template("admin.html", msg=msg)
@@ -318,6 +326,31 @@ def used():
   connection.commit()
   return render_template("used.html", rows=rows)
 
+@app.route("/plot.png")
+def plot_png():
+  fig = create_figure()
+  output = io.BytesIO()
+  FigureCanvas(fig).print_png(output)
+  return Response(output.getvalue(), mimetype='image/png')
+
+def create_figure():
+  fig, ax = plt.subplots(figsize=(6,6))
+  connection = sqlite3.connect("bharan.db")
+  c = connection.cursor()
+  c.execute("select * from citizen")
+  rows = c.fetchall()
+  df = pd.DataFrame(rows, columns=['uid', 'name', 'email', 'age', 'address', 'aadhar', 'longitude', 'latitude'])
+  x = df[['longitude', 'latitude']]
+  print(x)
+  cluster = AgglomerativeClustering().fit(x)
+  print(cluster.labels_)
+  df['cluster'] = cluster.labels_
+  a = df.groupby('cluster').mean()
+  #print(cluster.cluster_centers_)
+  ax.scatter(x['longitude'], x['latitude'], c = cluster.fit_predict(x), cmap ='rainbow')
+  ax.scatter(a['longitude'], a['latitude'], color='y')
+  return fig
+
 @app.route("/vaccination_center")
 def vaccination_center():
   connection = sqlite3.connect("bharan.db")
@@ -333,8 +366,8 @@ def vaccination_center():
   a = df.groupby('cluster').mean()
   #print(cluster.cluster_centers_)
   plt.figure(figsize =(6, 6))
-  plt.scatter(x['latitude'], x['longitude'], c = cluster.fit_predict(x), cmap ='rainbow')
-  plt.scatter(a['latitude'], a['longitude'], color='y')
+  plt.scatter(x['longitude'], x['latitude'], c = cluster.fit_predict(x), cmap ='rainbow')
+  plt.scatter(a['longitude'], a['latitude'], color='y')
   #plt.legend()
   plt.savefig('D:/se_website/static/plot.png')
   return render_template("vaccination_center.html", a=a, img="plot.png")
