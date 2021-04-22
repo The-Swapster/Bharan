@@ -163,7 +163,7 @@
         }
         .form{
             margin:auto;
-            width:50%;
+            width:75%;
             background-color: #0AC6FC;
             border-radius:20px;
         }
@@ -213,15 +213,27 @@
     </nav>
     <br> <br> <br> <br>
     <div class=form>
-        <div class=pgtitle>Vaccine</div>
+        <div class=pgtitle>Citizen Vaccinated</div>
         <br> <br>  
         <table align="center">
             <tr>
-                <td><p align="center"><a href="{{ url_for('order') }}">Orders</a></p></td>
-                <td><p align="center"><a href="{{ url_for('produce') }}">Produced</a></p></td>
-                <td><p align="center"><a href="{{ url_for('stock') }}">Stock</a></p></td>
-                <td><p align="center"><a href="{{ url_for('used') }}">Used</a></p></td>
+                <th>UID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Age</th>
+                <th>Address</th>
+                <th>Aadhaar</th>
             </tr>
+            {% for row in rows %}
+            <tr>
+                <td align="center">{{row[0]}}</td>
+                <td align="center">{{row[1]}}</td>
+                <td align="center">{{row[2]}}</td>
+                <td align="center">{{row[3]}}</td>
+                <td align="center">{{row[4]}}</td>
+                <td align="center">{{row[5]}}</td>
+            </tr>
+            {% endfor %}
         </table>
         <br><br>
     </div>
