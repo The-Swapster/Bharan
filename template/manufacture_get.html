@@ -208,9 +208,9 @@
     </nav>
     <br> <br> <br> <br>
     <div class=form>
-        <div class=pgtitle>Add Vaccine to Database</div>
+        <div class=pgtitle>Get orders from Database</div>
         <br> <br>  
-        <form class="register-form" action="\manufacture_view" method="POST" name="form1">
+        <form class="register-form" action="\manufacture_get" method="POST" name="form1">
             <table align="center">
                 <tr>
                     <td>Manufacture ID</td>
@@ -228,8 +228,8 @@
                 </tr>
                 {% for row in rows %}
                 <tr>
-                    <td align="center">{{row[0]}}</td>
                     <td align="center">{{row[1]}}</td>
+                    <td align="center">{{row[2]}}</td>
                 </tr>
                 {% endfor %}
             </table>
